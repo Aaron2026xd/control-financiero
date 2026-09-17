@@ -71,6 +71,63 @@
     <div class="fab" onclick="abrirAdd('task')">+</div>
   </div>
 
+  <!-- MÓDULO REQ (DESEOS/COMPRAS) -->
+  <div id="view-req" class="view">
+    <div class="scroll-container">
+      <div class="header" style="padding-bottom: 20px;">
+        <h1 style="margin-bottom: 5px;">Por Comprar</h1>
+        <div id="req-total" style="font-size:16px; font-weight:600; color:var(--gray);">Presupuesto est: S/ 0.00</div>
+      </div>
+      <div id="content-req" style="padding-bottom: 120px;"></div>
+    </div>
+    <div class="fab" onclick="abrirAdd('req')">+</div>
+  </div>
+
+  <!-- Formulario Nuevo Requerimiento -->
+  <div class="sheet" id="sheet-req">
+    <form id="f-req" onsubmit="saveReq(event)">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <button type="button" onclick="document.getElementById('f-req').reset();" style="color:var(--red); border:none; background:none; font-size:15px; font-weight:600; cursor:pointer;">Limpiar</button>
+        <h2 id="req-form-title" style="margin: 0; font-size: 22px;">Nuevo Requerimiento</h2>
+        <button type="button" onclick="cerrar()" style="color:var(--blue); border:none; background:none; font-size:17px; font-weight:600; cursor:pointer;">Cerrar</button>
+      </div>
+      <input type="hidden" name="id" id="r-id">
+      <div class="input-group">
+        <div class="input-row">
+          <label>Artículo</label>
+          <input type="text" name="item" id="r-item" placeholder="Ej. Lavavajillas" required>
+        </div>
+        <div class="input-row">
+          <label>Fecha Plan</label>
+          <input type="date" name="fecha_plan" id="r-fecha" required>
+        </div>
+        <div class="input-row">
+          <label>Costo Est.</label>
+          <div style="display:flex; flex:1; align-items:center; background: #f9f9f9; border-radius: 8px;">
+            <span style="font-size:15px; font-weight:600; color: #555; padding-left: 12px;">S/</span>
+            <input type="number" name="precio_est" id="r-precio" step="0.01" style="background:transparent; padding-left: 5px; flex:1;" required>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>¿Quién compra?</label>
+          <select name="encargado" id="r-owner" required>
+            <option value="Ambos">Ambos</option>
+            <option value="Aaron">Aaron</option>
+            <option value="Dayan">Dayan</option>
+          </select>
+        </div>
+        <div class="input-row" style="border-bottom:none;">
+          <label>Prioridad</label>
+          <select name="prioridad" id="r-prio" required>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-save" id="btn-r-save">Guardar en Lista</button>
+    </form>
+  </div>
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
@@ -90,12 +147,13 @@
       <span>Task</span>
     </div>
     
-    <div class="nav-item" style="opacity:0.3">
+    <div class="nav-item" onclick="nav('req', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M12 6v6l4 2"></path>
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
       </svg>
-      <span>Pay</span>
+      <span>List</span>
     </div>
     
     <div class="nav-item" style="opacity:0.3">
