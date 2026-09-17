@@ -29,8 +29,8 @@ templates = Jinja2Templates(directory="templates")
 # --- RUTA PRINCIPAL (CARGA LA INTERFAZ) ---
 @app.get("/", response_class=HTMLResponse)
 async def leer_interfaz(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
+    return templates.TemplateResponse(request=request, name="index.html")
+    
 # ==========================================
 # RUTAS PARA GASTOS (CARD)
 # ==========================================
