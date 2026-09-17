@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Control Financiero</title>
+  <style>
+    /* ==========================================
+       VARIABLES GLOBALES Y RESET
+       ========================================== */
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --blue: #007aff;
+      --red: #ff3b30;
+      --green: #34c759;
+      --yellow: #ffcc00;
+      --gray: #8e8e93;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+
+    html, body { 
+      overflow: hidden; 
+      width: 100%; 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+      background: var(--bg); 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    }
+
+    /* ==========================================
+       NAVEGACIÓN INFERIOR (BOTTOM NAV)
+       ========================================== */
+    .bottom-nav {
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      height: 75px;
+      background: rgba(255, 255, 255, 0.85); 
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid #c6c6c8; 
+      display: flex; 
+      justify-content: space-around; 
+      padding-top: 8px; 
+      padding-bottom: env(safe-area-inset-bottom); 
+      z-index: 5000;
+    }
+
+    .nav-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 2px; 
+      color: var(--gray); 
+      font-size: 9px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      width: 20%; 
+      transition: 0.2s; 
+    }
+
+    .nav-item.active { 
+      color: var(--blue); 
+    }
+
+    .nav-item svg { 
+      width: 20px; 
+      height: 20px; 
+      stroke-width: 2.5; 
+    }
+
+    /* ==========================================
+       ESTRUCTURA DE VISTAS (SPA)
+       ========================================== */
+    .view { 
+      display: none; 
+      width: 100%; 
+      height: 100%; 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      pointer-events: none; 
+    }
+
+    .view.active { 
+      display: block; 
+      pointer-events: auto; 
+    }
+
+    .scroll-container { 
+      position: absolute; 
+      top: 0; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      overflow-y: auto; 
+      -webkit-overflow-scrolling: touch; 
+    }
+
+    /* ==========================================
+       CABECERAS PRINCIPALES
+       ========================================== */
+    .header { 
+      position: sticky; 
+      top: 0; 
+      background: rgba(242, 242, 247, 0.9); 
+      backdrop-filter: blur(20px); 
+      z-index: 2000; 
+      border-bottom: 0.5px solid #c6c6c8; 
+      padding: 50px 16px 15px 16px; 
+    }
+
+    .header h1 { 
+      margin: 0; 
+      font-size: 32px; 
+      font-weight: 800; 
+      letter-spacing: -1px; 
+    }
+
+    /* ==========================================
+       DISEÑO MÓDULO CARD (GASTOS)
+       ========================================== */
+    .filter-btn { 
+      padding: 6px 14px; 
+      border-radius: 15px; 
+      border: none; 
+      background: #e5e5ea; 
+      font-size: 13px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      white-space: nowrap;
+    }
+
+    .filter-btn.active { 
+      background: var(--blue); 
+      color: white; 
+    }
+
+    .anio-label { 
+      padding: 25px 16px 10px 16px; 
+      font-size: 26px; 
+      font-weight: 800; 
+      color: #000; 
+      letter-spacing: -0.5px; 
+    }
+
+    .mes-header {
+      padding: 14px 16px; 
+      background: rgba(230, 230, 235, 0.9); 
+      font-size: 15px; 
+      font-weight: 700;
+      display: flex; 
+      justify-content: space-between; 
+      cursor: pointer; 
+      position: sticky; 
+      top: 138px; 
+      z-index: 10;
+      border-bottom: 1px solid #c6c6c8; 
+      border-top: 1px solid #c6c6c8; 
+      text-transform: uppercase;
+    }
+
+    .mes-header::after { 
+      content: '▼'; 
+      font-size: 11px; 
+      transition: 0.3s; 
+    }
+
+    .mes-header.collapsed::after { 
+      transform: rotate(-90deg); 
+    }
+
+    .lista-box { 
+      background: white; 
+      border-bottom: 1px solid #c6c6c8; 
+    }
+
+    .lista-box.hidden { 
+      display: none; 
+    }
+
+    .dia-header { 
+      padding: 8px 16px; 
+      background: var(--bg); 
+      font-size: 13px; 
+      font-weight: 600; 
+      color: var(--gray); 
+    }
+
+    .item-row { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 14px 16px; 
+      background: white; 
+      border-bottom: 0.5px solid #eee; 
+      cursor: pointer; 
+      z-index: 10; 
+      position: relative; 
+    }
+
+    .item-row:last-child { 
+      border-bottom: none; 
+    }
+
+    .item-row:active { 
+      background: #e5e5ea; 
+    }
+
+    .info-container { 
+      flex: 1; 
+      min-width: 0; 
+    }
+
+    .info-container h4 { 
+      margin: 0; 
+      font-size: 17px; 
+      font-weight: 500; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
+
+    .monto-box { 
+      width: 100px; 
+      text-align: right; 
+      font-size: 17px; 
+      font-weight: 700; 
+      flex-shrink: 0; 
+    }
+
+    .red { color: var(--red); } 
+    .green { color: var(--green); }
+    
+    .gasto-tag { 
+      font-size: 11px; 
+      background: #eee; 
+      padding: 2px 6px; 
+      border-radius: 4px; 
+      color: var(--gray); 
+      font-weight: 600; 
+      margin-top: 4px; 
+      display: inline-block; 
+    }
+
+    /* ==========================================
+       DISEÑO MÓDULO TASK (TAREAS)
+       ========================================== */
+    .date-strip { 
+      display: flex; 
+      gap: 12px; 
+      overflow-x: auto; 
+      padding: 10px 0; 
+      scroll-snap-type: x mandatory; 
+    }
+
+    .date-strip::-webkit-scrollbar { display: none; }
+
+    .day-card { 
+      min-width: 60px; 
+      height: 78px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      border-radius: 18px; 
+      background: white; 
+      scroll-snap-align: center; 
+      position: relative; 
+      transition: 0.2s; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05); 
+    }
+
+    .day-card.active { 
+      background: var(--blue); 
+      color: white; 
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); 
+    }
+
+    .day-num { font-size: 24px; font-weight: 700; }
+    .day-name { font-size: 11px; font-weight: 600; text-transform: uppercase; opacity: 0.7; margin-bottom: 2px; }
+
+    .status-dot { 
+      position: absolute; 
+      bottom: 8px; 
+      width: 6px; 
+      height: 6px; 
+      border-radius: 50%; 
+    }
+
+    .dot-red { background: var(--red); } 
+    .dot-yellow { background: var(--yellow); } 
+    .dot-green { background: var(--green); }
+    
+    .task-card { 
+      background: white; 
+      border-radius: 16px; 
+      padding: 16px; 
+      margin: 12px 16px; 
+      display: flex; 
+      align-items: center; 
+      gap: 15px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
+      cursor: pointer; 
+      position: relative; 
+      border-left: 6px solid transparent; 
+      transition: 0.3s;
+    }
+
+    .priority-Alta { border-left-color: var(--red); } 
+    .priority-Media { border-left-color: var(--yellow); } 
+    .priority-Baja { border-left-color: var(--blue); }
+
+    .task-card:active { transform: scale(0.98); }
+    .task-card.done { opacity: 0.4; filter: grayscale(0.5); }
+
+    .check-circle { 
+      width: 26px; 
+      height: 26px; 
+      border-radius: 50%; 
+      border: 2px solid #d1d1d6; 
+      flex-shrink: 0; 
+      transition: 0.2s; 
+    }
+
+    .done .check-circle { 
+      background: var(--blue); 
+      border-color: var(--blue); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+
+    .done .check-circle::after { 
+      content: '✓'; 
+      color: white; 
+      font-size: 16px; 
+      font-weight: bold; 
+    }
+
+    .owner-badge { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+
+    .owner-avatar { 
+      width: 20px; 
+      height: 20px; 
+      border-radius: 50%; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 10px; 
+      font-weight: 800; 
+      color: white; 
+    }
+
+    .owner-Aaron { background: #007aff; } 
+    .owner-Dayan { background: #ff2d55; } 
+    .owner-Ambos { background: #5856d6; }
+    .owner-name { font-size: 13px; font-weight: 600; color: var(--gray); }
+
+    .prio-tag { 
+      position: absolute; 
+      top: 16px; 
+      right: 16px; 
+      font-size: 10px; 
+      font-weight: 800; 
+      text-transform: uppercase; 
+      padding: 3px 8px; 
+      border-radius: 6px; 
+    }
+
+    .prio-Alta { background: #ffebeb; color: var(--red); } 
+    .prio-Media { background: #fff9e6; color: #b28900; } 
+    .prio-Baja { background: #e6f2ff; color: var(--blue); }
+
+    /* ==========================================
+       BOTÓN FLOTANTE (+) Y MODALES
+       ========================================== */
+    .fab { 
+      position: fixed; 
+      right: 20px; 
+      bottom: calc(95px + env(safe-area-inset-bottom)); 
+      width: 60px; 
+      height: 60px; 
+      background: var(--blue); 
+      color: white; 
+      border-radius: 30px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 32px; 
+      z-index: 4000; 
+      box-shadow: 0 6px 16px rgba(0,122,255,0.3); 
+    }
+
+    .overlay { 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.4); 
+      display: none; 
+      z-index: 6000; 
+    }
+
+    .sheet { 
+      position: fixed; 
+      bottom: -100%; 
+      left: 0; 
+      right: 0; 
+      background: var(--bg); 
+      border-radius: 25px 25px 0 0; 
+      padding: 24px 20px; 
+      z-index: 6001; 
+      transition: 0.4s cubic-bezier(0.1, 1, 0.2, 1); 
+      max-height: 85vh; 
+      overflow-y: auto; 
+      padding-bottom: 50px; 
+    }
+
+    .sheet.show { bottom: 0; }
+
+    /* ==========================================
+       DISEÑO DE FORMULARIOS ALINEADO Y LIMPIO
+       ========================================== */
+    .input-group { 
+      background: white; 
+      border-radius: 12px; 
+      margin-bottom: 15px; 
+      overflow: hidden; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+    }
+
+    .input-row { 
+      display: flex; 
+      align-items: center; 
+      padding: 14px 16px; 
+      border-bottom: 0.5px solid #e5e5ea; 
+    }
+    .input-row:last-child { border-bottom: none; }
+
+    .input-row label { 
+      width: 90px; 
+      flex-shrink: 0; 
+      font-weight: 600; 
+      font-size: 15px; 
+      color: #000; 
+      text-align: left; 
+    }
+
+    .input-row input, 
+    .input-row select, 
+    .input-row textarea { 
+      flex: 1; 
+      border: none; 
+      outline: none; 
+      font-size: 15px; 
+      background: #f9f9f9; 
+      border-radius: 8px;
+      text-align: left; 
+      padding: 10px 12px; 
+      color: #000; 
+      font-family: inherit; 
+      min-width: 0; 
+    }
+
+    .input-row.multiline { flex-direction: column; align-items: flex-start; }
+    .input-row.multiline label { margin-bottom: 8px; width: 100%; }
+    .input-row.multiline input, .input-row.multiline textarea { width: 100%; }
+    .input-row.multiline textarea { min-height: 80px; resize: none; line-height: 1.4; }
+
+    .btn-save { 
+      background: var(--blue); 
+      color: white; 
+      border: none; 
+      width: 100%; 
+      padding: 16px; 
+      border-radius: 14px; 
+      font-size: 17px; 
+      font-weight: 700; 
+      cursor: pointer; 
+    }
+    .btn-save:disabled { background: #999; cursor: not-allowed; }
+
+    /* ==========================================
+       DETALLE DE VISTAS
+       ========================================== */
+    .detalle-box { 
+      background: white; 
+      border-radius: 12px; 
+      padding: 0 16px; 
+      margin-bottom: 20px; 
+      overflow: hidden; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+    }
+    .detalle-row { 
+      display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 0.5px solid #eee; align-items: center; 
+    }
+    .detalle-label { color: #000; font-size: 16px; font-weight: 600; }
+    .detalle-value { font-size: 16px; text-align: right; color: var(--gray); }
+
+    .pencil-icon { color: var(--blue); width: 24px; height: 24px; cursor: pointer; padding: 4px; }
+
+    #fullscreen-modal { 
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; align-items: center; justify-content: center; flex-direction: column; 
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MÓDULO CARD (GASTOS) -->
+  <div id="view-card" class="view active">
+    <div class="scroll-container" id="scroll-c">
+      
+      <div class="header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h1>Card</h1>
+          <div id="card-total" style="font-size:20px; font-weight:700;">S/ 0.00</div>
+        </div>
+        
+        <div style="display:flex; gap:8px; margin-top:15px; overflow-x:auto; padding-bottom:5px;">
+          <button class="filter-btn active" onclick="fCardT('Todos', this)">Todos</button>
+          <button class="filter-btn" onclick="fCardT('Egreso', this)">Egresos</button>
+          <button class="filter-btn" onclick="fCardT('Ingreso', this)">Ingresos</button>
+          
+          <select id="cat-sel" onchange="fCardG(this.value)" style="background:#e5e5ea; border:none; border-radius:15px; padding:6px 12px; font-weight:600; font-size:13px; outline:none;">
+            <option value="Todos">Categorías</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Hogar">Hogar</option>
+            <option value="Alimentacion">Alimentación</option>
+            <option value="Restaurantes">Restaurantes</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Entretenimiento">Entretenimiento</option>
+            <option value="Viajes">Viajes</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="content-card" style="padding-bottom: 120px;"></div>
+    </div>
+    
+    <div class="fab" onclick="abrirAdd('card')">+</div>
+  </div>
+
+
+  <!-- MÓDULO TASK (TAREAS) -->
+  <div id="view-task" class="view">
+    <div class="scroll-container" id="scroll-t">
+      
+      <div class="header">
+        <h1 id="task-month" style="text-transform: capitalize;">Mes</h1>
+        <div class="date-strip" id="date-strip"></div>
+      </div>
+      
+      <div style="padding: 25px 16px 10px 16px; font-weight:800; font-size:22px; color:#000;">
+        Tareas Diarias
+      </div>
+      
+      <div id="content-task" style="padding-bottom: 120px;"></div>
+    </div>
+    
+    <div class="fab" onclick="abrirAdd('task')">+</div>
+  </div>
+
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="nav('card', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <path d="M1 10h22"></path>
+      </svg>
+      <span>Card</span>
+    </div>
+    
+    <div class="nav-item" onclick="nav('task', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M19 4H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"></path>
+        <path d="M16 2v4M8 2v4M3 10h18"></path>
+      </svg>
+      <span>Task</span>
+    </div>
+    
+    <div class="nav-item" style="opacity:0.3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 6v6l4 2"></path>
+      </svg>
+      <span>Pay</span>
+    </div>
+    
+    <div class="nav-item" style="opacity:0.3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      </svg>
+      <span>Place</span>
+    </div>
+  </div>
+
+
+  <!-- MODALES Y OVERLAYS -->
+  <div class="overlay" id="overlay" onclick="cerrar()"></div>
+
+  <!-- Formulario Nuevo Gasto -->
+  <div class="sheet" id="sheet-card">
+    <form id="f-card" onsubmit="saveCard(event)">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        
+        <label for="c-file" id="btn-camera" style="color:var(--blue); cursor:pointer; display: flex; flex-direction:column; align-items: center; justify-content: center; width: 44px; height: 44px; background: #e5e5ea; border-radius: 12px; transition: 0.3s;">
+          <svg id="camera-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 22px; height: 22px;">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </label>
+        
+        <input type="file" name="evidenciaFile" id="c-file" accept="image/*" style="display:none;">
+
+        <h2 id="card-form-title" style="margin: 0; font-size: 22px;">Nuevo Gasto</h2>
+        
+        <button type="button" onclick="cerrar()" style="color:var(--blue); border:none; background:none; font-size:17px; font-weight:600; cursor:pointer;">Cerrar</button>
+      </div>
+      
+      <input type="hidden" name="id" id="c-id">
+      <input type="hidden" name="evidenciaActual" id="c-ev-act">
+      
+      <div class="input-group">
+        <div class="input-row">
+          <label>Fecha</label>
+          <input type="date" name="fecha" id="c-fecha" required>
+        </div>
+        
+        <div class="input-row">
+          <label>Monto</label>
+          <div style="display:flex; flex:1; align-items:center; background: #f9f9f9; border-radius: 8px;">
+            <span style="font-size:15px; font-weight:600; color: #555; padding-left: 12px;">S/</span>
+            <input type="number" name="monto" id="c-monto" step="0.01" style="background:transparent; padding-left: 5px; flex:1;" required>
+          </div>
+        </div>
+        
+        <div class="input-row multiline">
+          <label>Concepto</label>
+          <textarea name="desc" id="c-desc" placeholder="Ej. Compras plaza vea" required></textarea>
+        </div>
+        
+        <div class="input-row">
+          <label>Tipo</label>
+          <select name="tipo" id="c-tipo" required>
+            <option value="Egreso">Egreso</option>
+            <option value="Ingreso">Ingreso</option>
+          </select>
+        </div>
+        
+        <div class="input-row">
+          <label>Categoría</label>
+          <select name="gasto" id="c-gasto" required>
+            <option value="Otros">Otros</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Hogar">Hogar</option>
+            <option value="Alimentacion">Alimentación</option>
+            <option value="Restaurantes">Restaurantes</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Entretenimiento">Entretenimiento</option>
+            <option value="Viajes">Viajes</option>
+          </select>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button type="button" onclick="limpiarFormCard()" class="btn-save" style="background: #ff3b30; flex: 0.35; font-size: 16px;">Limpiar</button>
+        <button type="submit" class="btn-save" id="btn-c-save" style="flex: 0.65; margin-top: 0;">Guardar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Detalle del Gasto -->
+  <div class="sheet" id="sheet-det-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin: 0; font-size: 22px;">Detalle</h2>
+      <div style="display:flex; gap:15px; align-items: center;">
+        <button onclick="prepararEditC()" style="background:none; border:none; cursor:pointer;">
+          <svg class="pencil-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+        <button onclick="cerrar()" style="color:var(--blue); border:none; background:none; font-size:17px; font-weight:600; cursor:pointer;">OK</button>
+      </div>
+    </div>
+    
+    <div style="text-align:center; margin: 30px 0;">
+      <h1 id="d-monto" style="font-size:42px; font-weight: 800; margin:0; letter-spacing: -1px;">S/ 0.00</h1>
+      <p id="d-desc" style="font-weight:600; font-size: 18px; margin-top: 10px; color: #000;"></p>
+    </div>
+    
+    <div class="detalle-box">
+      <div class="detalle-row">
+        <span class="detalle-label">Fecha</span>
+        <span class="detalle-value" id="d-fecha"></span>
+      </div>
+      <div class="detalle-row">
+        <span class="detalle-label">Categoría</span>
+        <span class="detalle-value" id="d-cat"></span>
+      </div>
+    </div>
+    
+    <div id="img-cont" style="border-radius:15px; overflow:hidden; background:#fff; text-align:center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+       <p id="img-msg" style="padding:20px; color:gray; font-weight: 600;">Cargando evidencia...</p>
+       <img id="d-img" style="width:100%; display:none; cursor:pointer;" onclick="fullImg()">
+    </div>
+  </div>
+
+  <!-- Formulario Nueva Tarea -->
+  <div class="sheet" id="sheet-task">
+    <form id="f-task" onsubmit="saveTask(event)">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <button type="button" onclick="document.getElementById('f-task').reset();" style="color:var(--red); border:none; background:none; font-size:15px; font-weight:600; cursor:pointer;">Limpiar</button>
+        <h2 id="task-form-title" style="margin: 0; font-size: 22px;">Nueva Tarea</h2>
+        <button type="button" onclick="cerrar()" style="color:var(--blue); border:none; background:none; font-size:17px; font-weight:600; cursor:pointer;">Cerrar</button>
+      </div>
+      
+      <input type="hidden" name="id" id="t-id">
+      <div class="input-group">
+        <div class="input-row">
+          <label>Fecha</label>
+          <input type="date" name="fecha" id="t-fecha" required>
+        </div>
+        <div class="input-row multiline">
+          <label>Actividad</label>
+          <textarea name="titulo" id="t-titulo" required></textarea>
+        </div>
+        <div class="input-row">
+          <label>Encargado</label>
+          <select name="responsable" id="t-owner" required>
+            <option value="Aaron">Aaron</option>
+            <option value="Dayan">Dayan</option>
+            <option value="Ambos">Ambos</option>
+          </select>
+        </div>
+        <div class="input-row" style="border-bottom:none;">
+          <label>Prioridad</label>
+          <select name="prioridad" id="t-prio" required>
+            <option value="Baja">Baja</option>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-save" id="btn-t-save">Programar Tarea</button>
+    </form>
+  </div>
+
+  <!-- Imagen a Pantalla Completa -->
+  <div id="fullscreen-modal" onclick="this.style.display='none'">
+    <img id="f-img" style="max-width:98%; max-height:95vh; border-radius:12px;">
+  </div>
+
+  <script>
+    let dCard = {};
+    let dTask = [];
+    let fT = 'Todos';
+    let fG = 'Todos';
+    let selF = '';
+    let itemSel = null;
+
+    // --- INTERACCIÓN DE LA CÁMARA ---
+    document.getElementById('c-file').addEventListener('change', function(e) {
+      const btnCam = document.getElementById('btn-camera');
+      const icon = document.getElementById('camera-icon');
+      if (this.files && this.files.length > 0) {
+        btnCam.style.background = 'var(--green)';
+        btnCam.style.color = 'white';
+        icon.style.stroke = 'white';
+      } else {
+        btnCam.style.background = '#e5e5ea';
+        btnCam.style.color = 'var(--blue)';
+        icon.style.stroke = 'currentColor';
+      }
+    });
+
+    // --- NAVEGACIÓN ---
+    function nav(v, el) {
+      document.querySelectorAll('.view, .nav-item').forEach(x => x.classList.remove('active'));
+      document.getElementById('view-' + v).classList.add('active');
+      el.classList.add('active');
+      cerrar();
+      if (v === 'task') { initT(); } else { initC(); }
+    }
+
+    // --- AUXILIAR: ESTRUCTURAR DATOS DE SUPABASE ---
+    function agruparGastos(datosPlanos) {
+      let estructura = {};
+      const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+      datosPlanos.forEach(item => {
+        let partes = item.fecha.split('-');
+        let anio = partes[0];
+        let mesNum = parseInt(partes[1], 10);
+        let mes = meses[mesNum - 1];
+        let dia = partes[2];
+
+        if (!estructura[anio]) estructura[anio] = {};
+        if (!estructura[anio][mes]) estructura[anio][mes] = {};
+        if (!estructura[anio][mes][dia]) estructura[anio][mes][dia] = [];
+
+        estructura[anio][mes][dia].push({
+          id: item.id,
+          monto: parseFloat(item.monto),
+          desc: item.descripcion,
+          tipo: item.tipo,
+          gasto: item.gasto,
+          fecha: `${dia}/${String(mesNum).padStart(2, '0')}/${anio.slice(-2)}`,
+          fechaRaw: item.fecha,
+          nota: item.nota,
+          evidencia: item.evidencia
+        });
+      });
+      return estructura;
+    }
+
+    // --- INIT CARD ---
+    async function initC() { 
+      if (Object.keys(dCard).length === 0) {
+        document.getElementById('content-card').innerHTML = '<p style="text-align:center; padding:40px; color:gray;">Cargando gastos...</p>';
+      }
+      try {
+        const response = await fetch('/api/gastos');
+        const data = await response.json();
+        dCard = agruparGastos(data); 
+        renderC(); 
+      } catch(e) {
+        console.error(e);
+        document.getElementById('content-card').innerHTML = '<p style="text-align:center; padding:40px; color:red;">Error de conexión.</p>';
+      }
+    }
+
+    // --- INIT TASK ---
+    async function initT() { 
+      if (dTask.length === 0) {
+        document.getElementById('content-task').innerHTML = '<p style="text-align:center; padding:40px; color:gray;">Sincronizando tareas...</p>';
+      }
+      try {
+        const response = await fetch('/api/tareas');
+        const data = await response.json();
+        dTask = data; 
+        cal(); 
+        renderT(); 
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    // --- RENDER CARD ---
+    function renderC() {
+      const list = document.getElementById('content-card'); 
+      list.innerHTML = '';
+      let saldo = 0; 
+      let hay = false;
+      const mesesR = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+      Object.keys(dCard).sort((a,b) => b - a).forEach(a => {
+        let htmlA = `<div class="anio-label">${a}</div>`;
+        let anioTieneMeses = false;
+
+        Object.keys(dCard[a]).sort((p,q) => mesesR.indexOf(q) - mesesR.indexOf(p)).forEach(m => {
+          let htmlM = ''; 
+          let totE = 0;
+          let countMes = 0;
+          
+          Object.keys(dCard[a][m]).sort((p,q) => q - p).forEach(dia => {
+            const arr = dCard[a][m][dia].filter(i => {
+              const n = s => s ? String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
+              return (fT === 'Todos' || i.tipo === fT) && (fG === 'Todos' || n(i.gasto) === n(fG));
+            });
+            
+            if(!arr.length) return;
+            countMes += arr.length;
+            htmlM += `<div class="dia-header">${arr[0].fecha}</div>`;
+            
+            arr.forEach(i => {
+              const esE = i.tipo === 'Egreso'; 
+              totE += esE ? i.monto : 0; 
+              saldo += esE ? -i.monto : i.monto;
+              
+              htmlM += `
+                <div class="item-row" onclick="verDet('${a}','${m}','${dia}','${i.id}')">
+                  <div class="info-container">
+                    <h4>${i.desc}</h4>
+                    <span class="gasto-tag">${i.gasto}</span>
+                  </div>
+                  <div class="monto-box ${esE ? 'red' : 'green'}">${esE ? '-' : '+'} S/ ${i.monto.toFixed(2)}</div>
+                </div>`;
+            });
+          });
+          
+          if(countMes > 0) {
+            anioTieneMeses = true; hay = true;
+            htmlA += `
+              <div class="mes-header collapsed" onclick="this.nextElementSibling.classList.toggle('hidden'); this.classList.toggle('collapsed')">
+                <span style="flex:1;">${m}</span>
+                <span style="color:var(--red); margin-right:10px;">S/ ${totE.toFixed(2)}</span>
+              </div>
+              <div class="lista-box hidden">${htmlM}</div>`;
+          }
+        });
+        if(anioTieneMeses) list.innerHTML += htmlA; 
+      });
+      
+      if(!hay) list.innerHTML = '<p style="text-align:center; padding:40px; color:gray; font-weight: 500;">Sin registros.</p>';
+      
+      const bEl = document.getElementById('card-total'); 
+      bEl.innerText = (saldo < 0 ? '- ' : '') + 'S/ ' + Math.abs(saldo).toFixed(2);
+      bEl.style.color = saldo < 0 ? 'var(--red)' : 'var(--green)';
+    }
+
+    // --- CALENDARIO SEMÁFORO ---
+    function cal() {
+      const s = document.getElementById('date-strip'); 
+      s.innerHTML = '';
+      const hoy = new Date(); 
+      const nD = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']; 
+      const nM = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      
+      if(!selF) selF = hoy.toISOString().split('T')[0];
+
+      for(let i = -10; i <= 30; i++) {
+        let d = new Date(); d.setDate(hoy.getDate() + i);
+        let iso = d.toISOString().split('T')[0];
+        
+        const tareasDia = dTask.filter(t => t.fecha === iso);
+        let dot = '';
+        
+        if(tareasDia.length > 0) {
+          const done = tareasDia.filter(t => t.estado === 'Done').length;
+          dot = done === tareasDia.length ? 'dot-green' : (done === 0 ? 'dot-red' : 'dot-yellow');
+        }
+        
+        const card = document.createElement('div');
+        card.className = `day-card ${iso === selF ? 'active' : ''}`;
+        card.innerHTML = `<span class="day-name">${nD[d.getDay()]}</span><span class="day-num">${d.getDate()}</span><div class="status-dot ${dot}"></div>`;
+        card.onclick = () => { selF = iso; cal(); renderT(); };
+        
+        s.appendChild(card);
+        if(iso === selF) {
+          document.getElementById('task-month').innerText = `${nM[d.getMonth()]} ${d.getFullYear()}`;
+          if(i === 0) setTimeout(() => card.scrollIntoView({inline:'center', behavior:'smooth'}), 150);
+        }
+      }
+    }
+
+    // --- RENDER TAREAS ---
+    function renderT() {
+      const list = document.getElementById('content-task'); 
+      list.innerHTML = '';
+      const items = dTask.filter(t => t.fecha === selF);
+      
+      if(!items.length) { 
+        list.innerHTML = '<div style="text-align:center; padding:50px; color:gray;"><div style="font-size:45px; margin-bottom: 10px;">☕</div><p style="font-weight: 600;">Día libre</p></div>'; 
+        return; 
+      }
+      
+      items.forEach(t => {
+        const isD = t.estado === 'Done';
+        const initial = t.responsable.charAt(0);
+        
+        list.innerHTML += `
+          <div class="task-card ${isD ? 'done' : ''} priority-${t.prioridad}" onclick="verDetT('${t.id}')">
+            <div class="check-circle" onclick="event.stopPropagation(); toggleT('${t.id}')"></div>
+            <div class="task-info">
+              <h4 class="task-title" style="margin:0; font-size:16px;">${t.titulo}</h4>
+              <div class="owner-badge">
+                <div class="owner-avatar owner-${t.responsable}">${initial}</div>
+                <span class="owner-name">${t.responsable}</span>
+              </div>
+            </div>
+            <span class="prio-tag prio-${t.prioridad}">${t.prioridad}</span>
+          </div>`;
+      });
+    }
+
+    // --- TOGGLE ESTADO TAREA ---
+    async function toggleT(id) {
+      const t = dTask.find(x => x.id === id);
+      t.estado = t.estado === 'Done' ? 'To do' : 'Done';
+      cal(); 
+      renderT();
+      
+      try {
+        // Asumiendo que crearás una ruta en Python para actualizar estado. Si no, lo hará visualmente por ahora.
+        let formData = new FormData();
+        formData.append("id", id);
+        formData.append("estado", t.estado);
+        await fetch('/api/tareas/estado', { method: 'POST', body: formData });
+      } catch(e) { console.error("No se pudo actualizar backend"); }
+    }
+
+    // --- VER DETALLE CARD ---
+    function verDet(a, m, d, id) {
+      itemSel = dCard[a][m][d].find(x => x.id === id);
+      
+      document.getElementById('d-monto').innerText = 'S/ ' + parseFloat(itemSel.monto).toFixed(2);
+      document.getElementById('d-monto').className = itemSel.tipo === 'Egreso' ? 'red' : 'green';
+      document.getElementById('d-desc').innerText = itemSel.desc;
+      document.getElementById('d-fecha').innerText = itemSel.fecha;
+      document.getElementById('d-cat').innerText = itemSel.gasto;
+      
+      const msg = document.getElementById('img-msg'); 
+      const img = document.getElementById('d-img');
+      img.style.display = 'none'; 
+      msg.style.display = 'block'; 
+      
+      if(itemSel.evidencia) {
+        img.src = itemSel.evidencia; 
+        img.onload = () => {
+          img.style.display = 'block'; 
+          msg.style.display = 'none'; 
+        };
+      } else { 
+        msg.innerText = 'Este registro no tiene foto.'; 
+      }
+      
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('sheet-det-card').classList.add('show');
+    }
+
+    // --- VER DETALLE/EDITAR TASK ---
+    function verDetT(id) {
+      const t = dTask.find(x => x.id === id);
+      if(!t) return;
+      
+      document.getElementById('t-id').value = t.id;
+      document.getElementById('t-fecha').value = t.fecha;
+      document.getElementById('t-titulo').value = t.titulo;
+      document.getElementById('t-owner').value = t.responsable;
+      document.getElementById('t-prio').value = t.prioridad;
+      document.getElementById('task-form-title').innerText = "Editar Tarea";
+      
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('sheet-task').classList.add('show');
+    }
+
+    // --- PREPARAR EDICIÓN CARD ---
+    function prepararEditC() {
+      document.getElementById('c-id').value = itemSel.id;
+      document.getElementById('c-fecha').value = itemSel.fechaRaw;
+      document.getElementById('c-monto').value = itemSel.monto;
+      document.getElementById('c-desc').value = itemSel.desc;
+      document.getElementById('c-tipo').value = itemSel.tipo;
+      document.getElementById('c-gasto').value = itemSel.gasto;
+      document.getElementById('c-ev-act').value = itemSel.evidencia || '';
+      document.getElementById('card-form-title').innerText = "Editar Gasto";
+      
+      const btnCam = document.getElementById('btn-camera');
+      const icon = document.getElementById('camera-icon');
+      if (itemSel.evidencia) {
+        btnCam.style.background = 'var(--green)'; btnCam.style.color = 'white'; icon.style.stroke = 'white';
+      } else {
+        btnCam.style.background = '#e5e5ea'; btnCam.style.color = 'var(--blue)'; icon.style.stroke = 'currentColor';
+      }
+      
+      document.getElementById('sheet-det-card').classList.remove('show');
+      document.getElementById('sheet-card').classList.add('show');
+    }
+
+    // --- LIMPIAR FORMULARIO CARD ---
+    function limpiarFormCard() {
+      document.getElementById('f-card').reset();
+      document.getElementById('c-id').value = ''; 
+      document.getElementById('c-ev-act').value = '';
+      document.getElementById('card-form-title').innerText = "Nuevo Gasto";
+      const d = new Date(); 
+      document.getElementById('c-fecha').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      
+      const btnCam = document.getElementById('btn-camera');
+      const icon = document.getElementById('camera-icon');
+      btnCam.style.background = '#e5e5ea'; btnCam.style.color = 'var(--blue)'; icon.style.stroke = 'currentColor';
+    }
+
+    function fCardT(t, el) { document.querySelectorAll('#view-card .filter-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); fT = t; renderC(); }
+    function fCardG(g) { fG = g; renderC(); }
+
+    function abrirAdd(v) { 
+      if(v === 'card') { limpiarFormCard(); } 
+      else { 
+        document.getElementById('f-task').reset(); document.getElementById('t-id').value = ''; 
+        document.getElementById('t-fecha').value = selF; document.getElementById('task-form-title').innerText = "Nueva Tarea"; 
+      }
+      document.getElementById('overlay').style.display = 'block'; 
+      document.getElementById('sheet-' + v).classList.add('show'); 
+    }
+    
+    function cerrar() { 
+      document.getElementById('overlay').style.display = 'none'; 
+      document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show')); 
+    }
+    
+    // --- GUARDAR CARD VÍA FASTAPI ---
+    async function saveCard(e) {
+      e.preventDefault(); 
+      const form = e.target;
+      if (!form.fecha.value || !form.monto.value || !form.desc.value || !form.tipo.value || !form.gasto.value) {
+        alert("Faltan campos obligatorios."); return;
+      }
+
+      const btn = document.getElementById('btn-c-save');
+      btn.innerText = 'Guardando...';
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData(form);
+        await fetch('/api/gastos', { method: 'POST', body: formData });
+        cerrar(); 
+        await initC();
+      } catch (error) {
+        alert("Error de red al guardar.");
+      } finally {
+        btn.innerText = 'Guardar';
+        btn.disabled = false;
+      }
+    }
+    
+    // --- GUARDAR TASK VÍA FASTAPI ---
+    async function saveTask(e) {
+      e.preventDefault(); 
+      const form = e.target;
+      if (!form.fecha.value || !form.titulo.value) { alert("Faltan campos."); return; }
+
+      const btn = document.getElementById('btn-t-save');
+      btn.innerText = 'Programando...'; btn.disabled = true;
+
+      try {
+        const formData = new FormData(form);
+        await fetch('/api/tareas', { method: 'POST', body: formData }); // Requiere ruta POST en main.py
+        cerrar(); 
+        await initT();
+      } catch (error) {
+        alert("Error de red.");
+      } finally {
+        btn.innerText = 'Programar Tarea'; btn.disabled = false;
+      }
+    }
+
+    function fullImg() { 
+      document.getElementById('f-img').src = document.getElementById('d-img').src; 
+      document.getElementById('fullscreen-modal').style.display = 'flex'; 
+    }
+
+    window.onload = initC;
+  </script>
+</body>
+</html>

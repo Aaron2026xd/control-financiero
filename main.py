@@ -1,6 +1,8 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse # <- ¡Importación agregada!
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from supabase import create_client, Client
 import os
 
@@ -20,13 +22,14 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# --- CONFIGURACIÓN DE MÓDULOS (CARPETAS) ---
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
 # --- RUTA PRINCIPAL (CARGA LA INTERFAZ) ---
-@app.get("/")
-def leer_interfaz():
-    # Asegúrate de que tu archivo se llame "index.html" en minúsculas en tu carpeta
-    with open("index.html", "r", encoding="utf-8") as f:
-        html_content = f.read()
-    return HTMLResponse(content=html_content, status_code=200)
+@app.get("/", response_class=HTMLResponse)
+async def leer_interfaz(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # ==========================================
 # RUTAS PARA GASTOS (CARD)
@@ -48,13 +51,11 @@ async def guardar_gasto(
 ):
     ruta_evidencia = ""
     
-    # --- EL SALVAVIDAS: Intentamos subir la foto, si falla, no se cae todo ---
+    # EL SALVAVIDAS: Intentamos subir la foto
     if evidenciaFile and evidenciaFile.filename:
         try:
             file_bytes = await evidenciaFile.read()
             file_name = f"{id}_{evidenciaFile.filename}"
-            
-            # Le indicamos a Supabase qué tipo de archivo es para que lo guarde correctamente
             supabase.storage.from_("evidencias").upload(
                 file_name, 
                 file_bytes,
@@ -63,7 +64,7 @@ async def guardar_gasto(
             ruta_evidencia = supabase.storage.from_("evidencias").get_public_url(file_name)
         except Exception as e:
             print(f"Error al subir foto: {e}")
-            # La ruta quedará vacía, pero el código continuará para guardar tu gasto
+            # Si la foto falla, el código continúa
     
     data = {
         "monto": monto, 
@@ -73,15 +74,12 @@ async def guardar_gasto(
         "fecha": fecha
     }
     
-    # Solo actualizamos la foto si realmente se subió una nueva
     if ruta_evidencia:
         data["evidencia"] = ruta_evidencia
 
     if id and not id.startswith("temp-"):
-        # MODO EDICIÓN
         supabase.table("card").update(data).eq("id", id).execute()
     else:
-        # MODO NUEVO
         supabase.table("card").insert(data).execute()
         
     return {"status": "success"}
@@ -110,10 +108,8 @@ async def guardar_tarea(
     }
 
     if id and not id.startswith("temp-"):
-        # MODO EDICIÓN
         supabase.table("task").update(data).eq("id", id).execute()
     else:
-        # MODO NUEVO
         data["estado"] = "To do"
         supabase.table("task").insert(data).execute()
         
@@ -124,6 +120,5 @@ async def actualizar_estado_tarea(
     id: str = Form(...),
     estado: str = Form(...)
 ):
-    # Esta ruta sirve para cuando le das clic al circulito de la tarea
     supabase.table("task").update({"estado": estado}).eq("id", id).execute()
     return {"status": "success"}

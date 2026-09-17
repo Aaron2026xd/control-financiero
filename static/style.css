@@ -1,0 +1,619 @@
+/* ==========================================
+   VARIABLES GLOBALES Y RESET
+   ========================================== */
+:root {
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --blue: #007aff;
+  --red: #ff3b30;
+  --green: #34c759;
+  --yellow: #ffcc00;
+  --gray: #8e8e93;
+  --text-main: #1c1c1e;
+}
+
+* { 
+  box-sizing: border-box; 
+  -webkit-tap-highlight-color: transparent; 
+}
+
+html, body { 
+  overflow: hidden; 
+  width: 100%; 
+  height: 100%; 
+  margin: 0; 
+  padding: 0; 
+  background: var(--bg); 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+}
+
+/* ==========================================
+   NAVEGACIÓN INFERIOR (BOTTOM NAV)
+   ========================================== */
+.bottom-nav {
+  position: fixed; 
+  bottom: 0; 
+  left: 0; 
+  right: 0; 
+  height: 85px;
+  background: rgba(255, 255, 255, 0.85); 
+  backdrop-filter: blur(20px); 
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 0.5px solid rgba(0,0,0,0.1); 
+  display: flex; 
+  justify-content: space-around; 
+  padding-top: 10px; 
+  padding-bottom: env(safe-area-inset-bottom); 
+  z-index: 5000;
+}
+
+.nav-item { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 4px; 
+  color: var(--gray); 
+  font-size: 10px; 
+  font-weight: 500; 
+  cursor: pointer; 
+  width: 25%; 
+  transition: color 0.2s; 
+}
+
+.nav-item.active { 
+  color: var(--blue); 
+}
+
+.nav-item svg { 
+  width: 24px; 
+  height: 24px; 
+  stroke-width: 2.2; 
+}
+
+/* ==========================================
+   ESTRUCTURA DE VISTAS (SPA)
+   ========================================== */
+.view { 
+  display: none; 
+  width: 100%; 
+  height: 100%; 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  pointer-events: none; 
+}
+
+.view.active { 
+  display: block; 
+  pointer-events: auto; 
+}
+
+.scroll-container { 
+  position: absolute; 
+  top: 0; 
+  bottom: 0; 
+  left: 0; 
+  right: 0; 
+  overflow-y: auto; 
+  -webkit-overflow-scrolling: touch; 
+}
+
+/* ==========================================
+   CABECERAS PRINCIPALES
+   ========================================== */
+.header { 
+  position: sticky; 
+  top: 0; 
+  background: rgba(242, 242, 247, 0.85); 
+  backdrop-filter: blur(20px); 
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 2000; 
+  border-bottom: 0.5px solid rgba(0,0,0,0.1); 
+  padding: 50px 20px 15px 20px; 
+}
+
+.header h1 { 
+  margin: 0; 
+  font-size: 34px; 
+  font-weight: 800; 
+  letter-spacing: -1px; 
+  color: var(--text-main); 
+}
+
+/* ==========================================
+   DISEÑO MÓDULO CARD (GASTOS)
+   ========================================== */
+.filter-btn { 
+  padding: 8px 16px; 
+  border-radius: 20px; 
+  border: none; 
+  background: #e5e5ea; 
+  font-size: 14px; 
+  font-weight: 600; 
+  color: var(--text-main); 
+  cursor: pointer; 
+  white-space: nowrap; 
+  transition: 0.2s;
+}
+
+.filter-btn.active { 
+  background: var(--text-main); 
+  color: white; 
+}
+
+.anio-label { 
+  padding: 25px 20px 10px 20px; 
+  font-size: 26px; 
+  font-weight: 800; 
+  color: var(--text-main); 
+  letter-spacing: -0.5px; 
+}
+
+.mes-header {
+  padding: 16px 20px; 
+  background: rgba(230, 230, 235, 0.9); 
+  font-size: 16px; 
+  font-weight: 700; 
+  display: flex; 
+  justify-content: space-between; 
+  cursor: pointer; 
+  position: sticky; 
+  top: 148px; 
+  z-index: 10; 
+  border-bottom: 1px solid #c6c6c8; 
+  border-top: 1px solid #c6c6c8; 
+}
+
+.mes-header::after { 
+  content: '▼'; 
+  font-size: 11px; 
+  transition: 0.3s; 
+}
+
+.mes-header.collapsed::after { 
+  transform: rotate(-90deg); 
+}
+
+.lista-box { 
+  background: white; 
+  border-bottom: 1px solid rgba(0,0,0,0.1); 
+}
+
+.lista-box.hidden { 
+  display: none; 
+}
+
+.dia-header { 
+  padding: 10px 20px; 
+  background: var(--bg); 
+  font-size: 13px; 
+  font-weight: 600; 
+  color: var(--gray); 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px;
+}
+
+.item-row { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 16px 20px; 
+  background: white; 
+  border-bottom: 0.5px solid #eee; 
+  cursor: pointer; 
+}
+
+.item-row:last-child { 
+  border-bottom: none; 
+}
+
+.item-row:active { 
+  background: #f2f2f7; 
+}
+
+.info-container { 
+  flex: 1; 
+  min-width: 0; 
+}
+
+.info-container h4 { 
+  margin: 0; 
+  font-size: 17px; 
+  font-weight: 500; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  color: var(--text-main);
+}
+
+.monto-box { 
+  width: 100px; 
+  text-align: right; 
+  font-size: 17px; 
+  font-weight: 600; 
+  flex-shrink: 0; 
+}
+
+.red { color: var(--red); } 
+.green { color: var(--green); }
+
+.gasto-tag { 
+  font-size: 12px; 
+  background: #f2f2f7; 
+  padding: 4px 8px; 
+  border-radius: 6px; 
+  color: var(--gray); 
+  font-weight: 600; 
+  margin-top: 6px; 
+  display: inline-block; 
+}
+
+/* ==========================================
+   MÓDULO TASK (NUEVO DISEÑO iPHONE 15)
+   ========================================== */
+.date-strip { 
+  display: flex; 
+  gap: 10px; 
+  overflow-x: auto; 
+  padding: 10px 20px; 
+  scroll-snap-type: x mandatory; 
+  scrollbar-width: none;
+}
+
+.date-strip::-webkit-scrollbar { 
+  display: none; 
+}
+
+.day-pill { 
+  min-width: 50px; 
+  height: 74px; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  border-radius: 25px; 
+  background: white; 
+  scroll-snap-align: center; 
+  position: relative; 
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+  border: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.day-pill.active { 
+  background: var(--text-main); 
+  color: white; 
+  border-color: var(--text-main);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15); 
+  transform: scale(1.05);
+}
+
+.day-pill .d-name { 
+  font-size: 11px; 
+  font-weight: 600; 
+  text-transform: uppercase; 
+  margin-bottom: 4px; 
+  opacity: 0.6; 
+}
+
+.day-pill.active .d-name { 
+  opacity: 0.9; 
+}
+
+.day-pill .d-num { 
+  font-size: 20px; 
+  font-weight: 700; 
+  letter-spacing: -0.5px;
+}
+
+.progress-container {
+  padding: 20px 20px 10px 20px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-end;
+}
+
+.progress-text { 
+  font-size: 22px; 
+  font-weight: 800; 
+  color: var(--text-main); 
+  letter-spacing: -0.5px;
+}
+
+.progress-stats { 
+  font-size: 14px; 
+  color: var(--gray); 
+  font-weight: 600; 
+}
+
+.ios-task-card { 
+  background: white; 
+  border-radius: 20px; 
+  padding: 18px 20px; 
+  margin: 12px 20px; 
+  display: flex; 
+  align-items: flex-start; 
+  gap: 16px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+  cursor: pointer; 
+  transition: all 0.2s ease; 
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+.ios-task-card:active { 
+  transform: scale(0.97); 
+}
+
+.ios-task-card.done { 
+  opacity: 0.5; 
+}
+
+.ios-task-card.done .task-title { 
+  text-decoration: line-through; 
+  color: var(--gray); 
+}
+
+.ios-check { 
+  width: 28px; 
+  height: 28px; 
+  border-radius: 50%; 
+  border: 2.5px solid #d1d1d6; 
+  flex-shrink: 0; 
+  transition: all 0.3s; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.ios-task-card.done .ios-check { 
+  background: var(--text-main); 
+  border-color: var(--text-main); 
+}
+
+.ios-check svg { 
+  width: 16px; 
+  height: 16px; 
+  stroke: white; 
+  stroke-width: 3; 
+  stroke-dasharray: 20; 
+  stroke-dashoffset: 20; 
+  transition: stroke-dashoffset 0.3s ease-in-out; 
+}
+
+.ios-task-card.done .ios-check svg { 
+  stroke-dashoffset: 0; 
+}
+
+.task-content { 
+  flex: 1; 
+}
+
+.task-title { 
+  margin: 0; 
+  font-size: 17px; 
+  font-weight: 600; 
+  color: var(--text-main); 
+  line-height: 1.3; 
+  transition: 0.2s;
+}
+
+.task-meta { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin-top: 8px; 
+}
+
+.owner-tag { 
+  display: flex; 
+  align-items: center; 
+  gap: 5px; 
+  font-size: 13px; 
+  font-weight: 600; 
+  color: var(--gray); 
+  background: #f2f2f7; 
+  padding: 4px 8px; 
+  border-radius: 8px;
+}
+
+.owner-dot { width: 8px; height: 8px; border-radius: 50%; }
+.owner-Aaron { background: var(--blue); } 
+.owner-Dayan { background: #ff2d55; } 
+.owner-Ambos { background: #5856d6; }
+
+.prio-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+.prio-Alta { background: var(--red); } 
+.prio-Media { background: var(--yellow); } 
+.prio-Baja { background: var(--blue); }
+.prio-text { font-size: 12px; font-weight: 600; color: var(--gray); }
+
+/* ==========================================
+   BOTÓN FLOTANTE (+) Y MODALES
+   ========================================== */
+.fab { 
+  position: fixed; 
+  right: 20px; 
+  bottom: calc(100px + env(safe-area-inset-bottom)); 
+  width: 56px; 
+  height: 56px; 
+  background: var(--text-main); 
+  color: white; 
+  border-radius: 28px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 32px; 
+  z-index: 4000; 
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2); 
+  transition: 0.2s;
+}
+
+.fab:active { 
+  transform: scale(0.9); 
+}
+
+.overlay { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.5); 
+  backdrop-filter: blur(4px); 
+  -webkit-backdrop-filter: blur(4px); 
+  display: none; 
+  z-index: 6000; 
+  transition: opacity 0.3s;
+}
+
+.sheet { 
+  position: fixed; 
+  bottom: -100%; 
+  left: 0; 
+  right: 0; 
+  background: var(--bg); 
+  border-radius: 30px 30px 0 0; 
+  padding: 24px 20px; 
+  z-index: 6001; 
+  transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+  max-height: 90vh; 
+  overflow-y: auto; 
+  padding-bottom: 50px; 
+}
+
+.sheet.show { 
+  bottom: 0; 
+}
+
+/* ==========================================
+   DISEÑO DE FORMULARIOS ALINEADO Y LIMPIO
+   ========================================== */
+.input-group { 
+  background: white; 
+  border-radius: 16px; 
+  margin-bottom: 20px; 
+  overflow: hidden; 
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02); 
+}
+
+.input-row { 
+  display: flex; 
+  align-items: center; 
+  padding: 16px; 
+  border-bottom: 0.5px solid #e5e5ea; 
+}
+
+.input-row:last-child { 
+  border-bottom: none; 
+}
+
+.input-row label { 
+  width: 100px; 
+  flex-shrink: 0; 
+  font-weight: 600; 
+  font-size: 16px; 
+  color: var(--text-main); 
+}
+
+.input-row input, 
+.input-row select, 
+.input-row textarea { 
+  flex: 1; 
+  border: none; 
+  outline: none; 
+  font-size: 16px; 
+  background: transparent; 
+  color: var(--text-main); 
+  font-family: inherit; 
+  width: 100%;
+}
+
+.input-row.multiline { 
+  flex-direction: column; 
+  align-items: flex-start; 
+}
+
+.input-row.multiline label { 
+  margin-bottom: 10px; 
+  width: 100%; 
+}
+
+.input-row.multiline textarea { 
+  min-height: 80px; 
+  resize: none; 
+  line-height: 1.4; 
+  background: #f9f9f9; 
+  padding: 12px; 
+  border-radius: 10px;
+}
+
+.btn-save { 
+  background: var(--text-main); 
+  color: white; 
+  border: none; 
+  width: 100%; 
+  padding: 18px; 
+  border-radius: 16px; 
+  font-size: 17px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: 0.2s;
+}
+
+.btn-save:disabled { 
+  background: #ccc; 
+}
+
+.btn-save:active { 
+  transform: scale(0.98); 
+}
+
+/* ==========================================
+   DETALLE DE VISTAS
+   ========================================== */
+.detalle-box { 
+  background: white; 
+  border-radius: 12px; 
+  padding: 0 16px; 
+  margin-bottom: 20px; 
+  overflow: hidden; 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+}
+
+.detalle-row { 
+  display: flex; 
+  justify-content: space-between; 
+  padding: 14px 0; 
+  border-bottom: 0.5px solid #eee; 
+  align-items: center; 
+}
+
+.detalle-label { 
+  color: #000; 
+  font-size: 16px; 
+  font-weight: 600; 
+}
+
+.detalle-value { 
+  font-size: 16px; 
+  text-align: right; 
+  color: var(--gray); 
+}
+
+.pencil-icon { 
+  color: var(--blue); 
+  width: 24px; 
+  height: 24px; 
+  cursor: pointer; 
+  padding: 4px; 
+}
+
+#fullscreen-modal { 
+  display: none; 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.95); 
+  z-index: 9000; 
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: column; 
+}
