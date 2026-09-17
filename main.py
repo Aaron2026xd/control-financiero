@@ -30,7 +30,7 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 async def leer_interfaz(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
-    
+
 # ==========================================
 # RUTAS PARA GASTOS (CARD)
 # ==========================================
@@ -121,4 +121,46 @@ async def actualizar_estado_tarea(
     estado: str = Form(...)
 ):
     supabase.table("task").update({"estado": estado}).eq("id", id).execute()
+    return {"status": "success"}
+
+
+# ==========================================
+# RUTAS PARA REQUERIMIENTOS (REQ)
+# ==========================================
+@app.get("/api/req")
+def obtener_req():
+    res = supabase.table("req").select("*").order("fecha_plan").execute()
+    return res.data
+
+@app.post("/api/req")
+async def guardar_req(
+    id: str = Form(""),
+    item: str = Form(...),
+    fecha_plan: str = Form(...),
+    encargado: str = Form(...),
+    prioridad: str = Form(...),
+    precio_est: float = Form(0.0)
+):
+    data = {
+        "item": item,
+        "fecha_plan": fecha_plan,
+        "encargado": encargado,
+        "prioridad": prioridad,
+        "precio_est": precio_est
+    }
+
+    if id and not id.startswith("temp-"):
+        supabase.table("req").update(data).eq("id", id).execute()
+    else:
+        data["estado"] = "Pendiente"
+        supabase.table("req").insert(data).execute()
+        
+    return {"status": "success"}
+
+@app.post("/api/req/estado")
+async def actualizar_estado_req(
+    id: str = Form(...),
+    estado: str = Form(...)
+):
+    supabase.table("req").update({"estado": estado}).eq("id", id).execute()
     return {"status": "success"}
